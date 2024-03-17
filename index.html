@@ -1,0 +1,42 @@
+<title>Screen Recorder</title>
+
+<button id='startButton'>Record</button><br>
+<button id='downloadButton' disabled>Download</button>
+
+<script>
+    const startButton = document.getElementById('startButton');
+    const downloadButton = document.getElementById('downloadButton');
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    startButton.addEventListener('click', async () => {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        
+        mediaRecorder.ondataavailable = (event) => {
+        recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+        const url = URL.createObjectURL(blob);
+        downloadButton.disabled = false;
+        startButton.disabled = true;
+        downloadButton.addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'file.mp4';
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            location.reload();
+        });
+        };
+
+        mediaRecorder.start();
+    } catch (error) {
+        console.error('Error accessing screen capture:', error);
+    }
+    });
+</script>
